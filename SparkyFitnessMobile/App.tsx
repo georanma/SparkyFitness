@@ -86,6 +86,7 @@ import {
   SafePasskeySettings,
   SafeAppSettings,
   SafeNotificationSettings,
+  SafeKitchenScaleSettings,
   SafeAbout,
   SafeWhatsNew,
   SafeDailyNutritionDetails,
@@ -805,6 +806,11 @@ function AppContent() {
             name="NotificationSettings"
             component={SafeNotificationSettings}
             options={createStackScreenOptions(t('notifications.title', { defaultValue: 'Notifications' }), { headerBackTitle: t('settings.app', { defaultValue: 'App Settings' }) })}
+          />
+          <Stack.Screen
+            name="KitchenScaleSettings"
+            component={SafeKitchenScaleSettings}
+            options={createStackScreenOptions(t('kitchenScale.title', { defaultValue: 'Kitchen scale' }), { headerBackTitle: t('navigation.settings', { defaultValue: 'Settings' }) })}
           />
           <Stack.Screen
             name="About"

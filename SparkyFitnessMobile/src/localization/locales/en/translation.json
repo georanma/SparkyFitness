@@ -112,7 +112,8 @@
       "whatsNew": "What's New",
       "logs": "View Logs",
       "about": "About",
-      "shareReport": "Share Diagnostic Report"
+      "shareReport": "Share Diagnostic Report",
+      "kitchenScale": "Kitchen scale"
     },
     "theme": {
       "title": "Theme",
@@ -5305,5 +5306,34 @@
     "legendCurve": "Active caffeine",
     "legendThreshold": "{{threshold}}mg threshold",
     "unitMg": "mg"
+  },
+  "kitchenScale": {
+    "title": "Kitchen scale",
+    "experimentalIos": "Experimental on iOS",
+    "pairedTitle": "Your scale",
+    "useScale": "Use scale when adding food",
+    "useScaleSubtitle": "Fills the quantity from the scale while you add a food.",
+    "useScaleAccessibility": "Use scale when adding food",
+    "forget": "Forget this scale",
+    "scan": "Scan for scales",
+    "scanning": "Scanning. Wake your scale by pressing its button.",
+    "scanSubtitle": "Supported: Renpho Calibra+. Close the Renpho app first.",
+    "noResults": "No scales found yet.",
+    "bluetoothOff": "Bluetooth is off. Turn it on and scan again.",
+    "permissionDenied": "Bluetooth permission is needed to find your scale.",
+    "scanError": "Scan failed: {{message}}",
+    "chip": {
+      "connecting": "Connecting to scale...",
+      "ready": "Scale ready. Place your food on it.",
+      "grams": "{{grams}} g",
+      "gramsRemoved": "{{grams}} g removed",
+      "locked": "Weight kept",
+      "weighAgain": "Weigh again",
+      "pickWeightUnit": "Pick a weight unit (g, oz) to use the scale",
+      "bluetoothOff": "Bluetooth is off",
+      "permissionDenied": "Bluetooth permission needed",
+      "notFound": "Scale not found. Wake it and tap to retry",
+      "lost": "Scale disconnected. Tap to retry"
+    }
   }
 }

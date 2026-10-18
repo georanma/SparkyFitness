@@ -313,6 +313,14 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
                 onPress={() => navigation.navigate('WorkoutSettings')}
                 iconColor={catBlue}
               />
+              <SettingsRow
+                icon="scale"
+                title={t('settings.rows.kitchenScale', {
+                  defaultValue: 'Kitchen scale',
+                })}
+                onPress={() => navigation.navigate('KitchenScaleSettings')}
+                iconColor={catBlue}
+              />
             </SettingsRowGroup>
 
             <SettingsRowGroup>
