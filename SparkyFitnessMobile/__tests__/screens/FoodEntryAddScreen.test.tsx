@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import {
   findHeaderItemByAccessibilityLabel,
   pressActionByAccessibilityLabel,
@@ -86,6 +86,30 @@ jest.mock('../../src/hooks/useAddFoodEntry', () => ({
 
 jest.mock('../../src/hooks/useAddFoodEntryMeal', () => ({
   useAddFoodEntryMeal: jest.fn(),
+}));
+
+const mockKitchenScale = {
+  status: 'ready' as const,
+  grams: 120,
+  removing: false,
+  mode: 'following' as const,
+  unitSupported: true,
+  weighAgain: jest.fn(),
+  markManual: jest.fn(),
+  retry: jest.fn(),
+};
+let mockScaleOptions: {
+  servingUnit: string;
+  onQuantity: (quantity: number) => void;
+} | null = null;
+jest.mock('../../src/hooks/useKitchenScale', () => ({
+  useKitchenScale: (options: {
+    servingUnit: string;
+    onQuantity: (quantity: number) => void;
+  }) => {
+    mockScaleOptions = options;
+    return mockKitchenScale;
+  },
 }));
 
 jest.mock('../../src/services/mealBuilderSelection', () => ({
@@ -818,6 +842,22 @@ describe('FoodEntryAddScreen', () => {
     });
 
     expect(screen.getByDisplayValue('2.5')).toBeTruthy();
+  });
+
+  it('shows the scale chip and fills the quantity from the scale', () => {
+    const screen = renderScreen({ item: baseLocalItem });
+    expect(screen.getByText('120 g')).toBeTruthy();
+    expect(mockScaleOptions?.servingUnit).toBe('cup');
+
+    act(() => mockScaleOptions?.onQuantity(150));
+    expect(screen.getByTestId('quantity-input').props.value).toBe('150');
+  });
+
+  it('tells the scale when the quantity is edited by hand', () => {
+    mockKitchenScale.markManual.mockClear();
+    const screen = renderScreen({ item: baseLocalItem });
+    fireEvent.changeText(screen.getByTestId('quantity-input'), '2');
+    expect(mockKitchenScale.markManual).toHaveBeenCalledTimes(1);
   });
 
   it('pre-selects a mealTypeId passed through navigation and sends it in the payload', () => {

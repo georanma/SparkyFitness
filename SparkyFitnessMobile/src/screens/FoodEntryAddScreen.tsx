@@ -7,6 +7,8 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatLocalizedNumber } from '../localization';
+import KitchenScaleChip from '../components/KitchenScaleChip';
+import { useKitchenScale } from '../hooks/useKitchenScale';
 import {
   View,
   Text,
@@ -637,6 +639,11 @@ const FoodEntryAddScreen: React.FC<FoodEntryAddScreenProps> = ({
 
   const [quantityText, setQuantityText] = useState(String(initialQuantity));
   const quantity = parseDecimalInput(quantityText) || 0;
+  const kitchenScale = useKitchenScale({
+    servingUnit: displayValues.servingUnit,
+    onQuantity: (scaleQuantity) =>
+      setQuantityText(formatServingSizeDisplay(scaleQuantity)),
+  });
   const servings =
     displayValues.servingSize > 0 ? quantity / displayValues.servingSize : 0;
   const servingSizeRef = useRef(displayValues.servingSize);
@@ -807,6 +814,7 @@ const FoodEntryAddScreen: React.FC<FoodEntryAddScreenProps> = ({
 
   const updateQuantityText = (text: string) => {
     if (DECIMAL_INPUT_REGEX.test(text)) {
+      kitchenScale.markManual();
       setQuantityText(text);
     }
   };
@@ -819,6 +827,7 @@ const FoodEntryAddScreen: React.FC<FoodEntryAddScreenProps> = ({
   };
 
   const adjustQuantity = (delta: number) => {
+    kitchenScale.markManual();
     setQuantityText(
       String(nextQuantity(quantity, delta, displayValues.servingSize))
     );
@@ -1607,6 +1616,7 @@ const FoodEntryAddScreen: React.FC<FoodEntryAddScreenProps> = ({
               {quantityUnitLabel}
             </Text>
           </View>
+          <KitchenScaleChip scale={kitchenScale} />
           <View className="flex-row items-center mt-2">
             <Text className="text-text-secondary text-sm">
               {formatLocalizedNumber(servings, { maximumFractionDigits: 1 })}{' '}
