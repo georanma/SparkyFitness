@@ -166,6 +166,8 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
         // string.
         NSCameraUsageDescription:
           'SparkyFitness uses the camera to photograph foods and meals, and to scan barcodes and nutrition labels.',
+        NSBluetoothAlwaysUsageDescription:
+          'SparkyFitness uses Bluetooth to read weights from your kitchen scale.',
         NSPhotoLibraryUsageDescription:
           'SparkyFitness lets you choose photos from your library for your foods, meals, and diary entries.',
         NSAppTransportSecurity: {
@@ -214,6 +216,16 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
       './plugins/withAppLanguage',
       './plugins/withCalorieWidget',
       './plugins/withExactAlarmModule',
+      [
+        'react-native-ble-plx',
+        {
+          // Foreground use only: no background Bluetooth modes.
+          isBackgroundEnabled: false,
+          // The iOS usage string is set below in infoPlist (and localized from
+          // `locales`), so the plugin must not add its own.
+          bluetoothAlwaysPermission: false,
+        },
+      ],
       './plugins/withEnrichedMarkdownNoMath',
       './plugins/withSceneLifecycle',
       [
