@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-09-24_
+_Last updated: 2026-10-17_
 
 SparkyFitness Mobile is a React Native 0.86 + Expo SDK 57 app for syncing Apple Health / Health Connect data with the SparkyFitness backend, tracking nutrition, hydration, fasting, measurements, exercise, saved foods, meal templates, custom exercises, workout presets, iOS / Android widgets, the active workout HUD, and the Sparky AI chat.
 
@@ -95,6 +95,7 @@ npx expo prebuild --clean
 - `src/services/healthconnect/` - Android Health Connect reads, native aggregation, transformation, enrichment, preferences, and writeback.
 - `src/services/healthkit/` - iOS HealthKit reads, statistics aggregation, transformation, background delivery, preferences, and writeback.
 - `src/services/shared/` - platform-agnostic health helpers: the `collectHealthData` / `runForegroundSync` engine both orchestrators share, the per-run workout-telemetry budget and its reuse cache, Health Connect error classification, sample downsampling, day aggregation/transformation, preference factories, and permission migration/sets.
+- `src/services/scale/` - Bluetooth kitchen-scale support: platform-neutral `ScaleDriver`/`ScaleTransport` interfaces (`ScaleDriver.ts`), the pure Calibra+ codec and session under `calibra/`, the only `react-native-ble-plx` importer (`bleTransport.ts`), `scaleConnection.ts`, mass-unit conversion and the quantity follower reducer.
 - `src/services/` - platform health orchestration, writeback re-exports, background sync, auto-sync coordination, diagnostics, calculations, logging, storage, theme, haptics, sounds, notifications, food photo intro, meal selection, boolean preferences, card visibility, and workout drafts.
 - `src/stores/` - Zustand stores, including the persisted active workout/rest timer store.
 - `src/utils/` - date helpers, unit conversion, food details, meal nutrition, nutrient display, workout/session helpers, fasting formatting, numeric input, concurrency, sync utilities, duplicate-press guarding, photo estimate error mapping, and rate limiting.
@@ -178,6 +179,15 @@ npx expo prebuild --clean
 - Estimation posts to `POST /api/foods/estimate-food-photo` through `estimateFoodPhoto(...)` in `externalFoodSearchApi.ts` and uses typed `FoodPhotoEstimateError` codes from `@workspace/shared`.
 - Food-photo request/response changes cross package boundaries: update shared schema and server route/service with mobile.
 - Keep `auto_scale_online_imports` separate from Open Food Facts-specific scaling preferences in `FoodSettingsScreen`.
+
+## Kitchen Scale (Bluetooth)
+
+- Optional feature: pair a scale once in Settings → Kitchen scale; `FoodEntryAddScreen` then fills `quantityText` from the scale. The form always works without it.
+- Layers: `useKitchenScale` (lifecycle, 250 ms live throttle, drives the quantity only for mass units) → `scaleConnection.ts` → `bleTransport.ts` (the only `react-native-ble-plx` importer) and a `ScaleDriver` from `scaleRegistry.ts`. Protocol code lives in `src/services/scale/<model>/`; the Calibra+ (`R-MSK03`, ICOMON OEM) is the only driver. To add a scale: write its codec/session, implement `ScaleDriver`, register it in `scaleRegistry.ts`, add golden-frame tests.
+- Quantity rule: the follower (`quantityFollower.ts`) uses the **magnitude** of the signed reading (negative means food removed from a tared container), locks on a settled weight of at least 1 g, and stops on a manual edit. "Weigh again" resumes. The scale pairing (`stores/scaleStore.ts`) is device-local and never synced.
+- Calibra+ protocol facts: a session must send one empty `0x98` frame (`55 aa 98 00 00 97`) or the scale hangs up after 10 s, and must ack every scale-initiated `0x10 0x12 0x13 0x1c 0x1e` frame. Never embed vendor data (the vendor app's large `0x98` blob is not needed). Android phones accept the scale's connection-parameter request; do not try to force connection parameters from the app.
+- iOS is designed for but unverified by the maintainers; Settings labels the feature experimental there.
+- Adding or changing the BLE plugin or permissions in `app.config.ts` needs `npx expo prebuild --clean`.
 
 ## Exercise, Workouts, And Fasting
 
