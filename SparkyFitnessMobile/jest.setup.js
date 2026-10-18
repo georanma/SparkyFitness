@@ -709,3 +709,32 @@ if (!testI18n.isInitialized) {
     interpolation: { escapeValue: false },
   });
 }
+
+jest.mock('react-native-ble-plx', () => {
+  const manager = {
+    state: jest.fn(async () => 'PoweredOn'),
+    onStateChange: jest.fn((listener) => {
+      listener('PoweredOn');
+      return { remove: jest.fn() };
+    }),
+    startDeviceScan: jest.fn(async () => undefined),
+    stopDeviceScan: jest.fn(async () => undefined),
+    connectToDevice: jest.fn(),
+    cancelDeviceConnection: jest.fn(async () => undefined),
+    writeCharacteristicWithResponseForDevice: jest.fn(async () => undefined),
+    monitorCharacteristicForDevice: jest.fn(() => ({ remove: jest.fn() })),
+    onDeviceDisconnected: jest.fn(() => ({ remove: jest.fn() })),
+  };
+  return {
+    BleManager: jest.fn(() => manager),
+    State: {
+      Unknown: 'Unknown',
+      Resetting: 'Resetting',
+      Unsupported: 'Unsupported',
+      Unauthorized: 'Unauthorized',
+      PoweredOff: 'PoweredOff',
+      PoweredOn: 'PoweredOn',
+    },
+    __manager: manager,
+  };
+});
