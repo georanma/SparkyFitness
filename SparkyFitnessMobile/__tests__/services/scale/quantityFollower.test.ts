@@ -32,6 +32,35 @@ describe('followReducer', () => {
     });
   });
 
+  it('ignores an empty scale until a real weight arrives, so a pre-filled quantity survives', () => {
+    expect(
+      run([
+        { type: 'live', grams: 0 },
+        { type: 'live', grams: 0 },
+      ])
+    ).toBe(INITIAL_FOLLOW_STATE);
+    expect(run([{ type: 'live', grams: 1 }]).grams).toBe(1);
+  });
+
+  it('follows a drop back to zero once a real weight has been seen', () => {
+    expect(
+      run([
+        { type: 'live', grams: 150 },
+        { type: 'live', grams: 0 },
+      ])
+    ).toEqual({ mode: 'following', grams: 0, negative: false });
+  });
+
+  it('ignores an empty scale again after weigh again', () => {
+    expect(
+      run([
+        { type: 'settled', grams: 176 },
+        { type: 'resume' },
+        { type: 'live', grams: 0 },
+      ])
+    ).toBe(INITIAL_FOLLOW_STATE);
+  });
+
   it('locks on a settled weight of at least 1 g', () => {
     expect(
       run([

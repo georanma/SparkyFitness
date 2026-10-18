@@ -5,7 +5,13 @@ import {
   ensureBluetoothAccess,
   startScaleScan,
 } from '../../../src/services/scale/bleTransport';
+import { addLog } from '../../../src/services/LogService';
 import { hex, toHex } from '../../helpers/bytes';
+
+jest.mock('../../../src/services/LogService', () => ({
+  addLog: jest.fn(async () => undefined),
+}));
+const mockAddLog = addLog as jest.MockedFunction<typeof addLog>;
 
 interface MockManager {
   state: jest.Mock;
@@ -187,6 +193,26 @@ describe('bleTransport', () => {
       expect(received).toEqual(['55aa98000097']);
       unsubscribe();
       expect(remove).toHaveBeenCalled();
+    });
+
+    it('logs a subscribe failure but not a cancellation or link loss', async () => {
+      manager.connectToDevice.mockResolvedValueOnce(connectedDevice());
+      const result = await connectScale('AA');
+      if (result.kind !== 'connected') throw new Error('expected a connection');
+      result.connection.transport.subscribe(ADDRESS, jest.fn());
+      const listener = manager.monitorCharacteristicForDevice.mock
+        .calls[0][3] as (
+        error: { message: string; errorCode: number } | null,
+        characteristic: null
+      ) => void;
+
+      listener({ message: 'cancelled', errorCode: 2 }, null);
+      listener({ message: 'disconnected', errorCode: 201 }, null);
+      expect(mockAddLog).not.toHaveBeenCalled();
+
+      listener({ message: 'Characteristic not found', errorCode: 404 }, null);
+      expect(mockAddLog).toHaveBeenCalledTimes(1);
+      expect(mockAddLog.mock.calls[0][0]).toContain('Characteristic not found');
     });
 
     it('forwards the disconnect callback and disconnects on request', async () => {

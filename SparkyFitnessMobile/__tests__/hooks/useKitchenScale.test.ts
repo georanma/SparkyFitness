@@ -113,6 +113,27 @@ describe('useKitchenScale', () => {
     }
   );
 
+  it('keeps the form quantity while the scale reads empty', async () => {
+    useScaleStore.setState({ paired });
+    const harnesses = installConnector();
+    const { result, onQuantity } = setup();
+    await settle(harnesses[0]);
+
+    act(() => harnesses[0].emit({ kind: 'live', grams: 0 }));
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(300);
+    });
+    act(() => harnesses[0].emit({ kind: 'live', grams: 0 }));
+    expect(onQuantity).not.toHaveBeenCalled();
+    expect(result.current.grams).toBeNull();
+
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(300);
+    });
+    act(() => harnesses[0].emit({ kind: 'live', grams: 40 }));
+    expect(onQuantity).toHaveBeenLastCalledWith(40);
+  });
+
   it('drives the quantity from live readings, using the magnitude when negative', async () => {
     useScaleStore.setState({ paired });
     const harnesses = installConnector();

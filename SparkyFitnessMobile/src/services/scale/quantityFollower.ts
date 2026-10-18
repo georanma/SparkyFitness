@@ -20,8 +20,8 @@ export const INITIAL_FOLLOW_STATE: FollowState = {
   negative: false,
 };
 
-/** A settled weight lighter than this is an empty scale, not a weighing. */
-const MIN_LOCK_GRAMS = 1;
+/** A reading lighter than this is an empty scale, not a weighing. */
+const MIN_WEIGHT_GRAMS = 1;
 
 const reading = (mode: FollowMode, grams: number): FollowState => ({
   mode,
@@ -35,12 +35,16 @@ export function followReducer(
 ): FollowState {
   switch (action.type) {
     case 'live':
-      return state.mode === 'following'
-        ? reading('following', action.grams)
-        : state;
+      if (state.mode !== 'following') return state;
+      // An empty scale streams 0 g constantly; until the first real weight,
+      // following it would wipe whatever the form was pre-filled with.
+      if (state.grams === null && Math.abs(action.grams) < MIN_WEIGHT_GRAMS) {
+        return state;
+      }
+      return reading('following', action.grams);
     case 'settled':
       return state.mode === 'following' &&
-        Math.abs(action.grams) >= MIN_LOCK_GRAMS
+        Math.abs(action.grams) >= MIN_WEIGHT_GRAMS
         ? reading('locked', action.grams)
         : state;
     case 'manual':

@@ -1,6 +1,13 @@
 import { PermissionsAndroid, Platform } from 'react-native';
-import { BleManager, State, type Subscription } from 'react-native-ble-plx';
+import {
+  BleErrorCode,
+  BleManager,
+  State,
+  type BleError,
+  type Subscription,
+} from 'react-native-ble-plx';
 
+import { addLog } from '../LogService';
 import { base64ToBytes, bytesToBase64 } from './base64';
 import type {
   GattAddress,
@@ -10,6 +17,11 @@ import type {
 
 const CONNECT_TIMEOUT_MS = 15000;
 const STATE_TIMEOUT_MS = 3000;
+/** Reported through the disconnect callback instead, so not worth logging here. */
+const EXPECTED_MONITOR_ERRORS: ReadonlySet<number> = new Set([
+  BleErrorCode.OperationCancelled,
+  BleErrorCode.DeviceDisconnected,
+]);
 
 export type BluetoothAccess = 'ready' | 'bluetooth-off' | 'permission-denied';
 
@@ -27,6 +39,13 @@ let sharedManager: BleManager | null = null;
 function getManager(): BleManager {
   sharedManager ??= new BleManager();
   return sharedManager;
+}
+
+function reportMonitorError(error: BleError): void {
+  if (EXPECTED_MONITOR_ERRORS.has(error.errorCode)) return;
+  // e.g. characteristic not found or notify unsupported: the session would
+  // otherwise sit in "ready" forever with no frames and no trace.
+  void addLog(`[scale] subscribe error: ${error.message}`, 'WARNING');
 }
 
 function errorMessage(error: unknown): string {
@@ -119,8 +138,11 @@ function createTransport(
         address.service,
         address.characteristic,
         (error, characteristic) => {
-          // Errors here are cancellations and link loss; the disconnect callback reports those.
-          if (error || !characteristic?.value) return;
+          if (error) {
+            reportMonitorError(error);
+            return;
+          }
+          if (!characteristic?.value) return;
           onValue(base64ToBytes(characteristic.value));
         }
       );

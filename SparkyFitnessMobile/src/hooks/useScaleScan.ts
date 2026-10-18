@@ -30,6 +30,7 @@ export function useScaleScan(): ScaleScan {
   const [results, setResults] = useState<ScanResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const stopScan = useRef<(() => void) | null>(null);
+  const mounted = useRef(true);
 
   const stop = useCallback(() => {
     stopScan.current?.();
@@ -42,6 +43,7 @@ export function useScaleScan(): ScaleScan {
     setResults([]);
     setError(null);
     const granted = await ensureBluetoothAccess();
+    if (!mounted.current) return; // left the screen while the permission prompt was open
     setAccess(granted);
     if (granted !== 'ready') return;
 
@@ -73,7 +75,13 @@ export function useScaleScan(): ScaleScan {
     );
   }, [stop]);
 
-  useEffect(() => stop, [stop]);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      stop();
+    };
+  }, [stop]);
 
   return { access, scanning, results, error, start, stop };
 }

@@ -221,6 +221,11 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
         {
           // Foreground use only: no background Bluetooth modes.
           isBackgroundEnabled: false,
+          // The app never derives location from scan results. Without this
+          // flag Android 12+ filters scan results from an app that holds
+          // neither it nor location permission, and bleTransport requests only
+          // BLUETOOTH_SCAN/CONNECT on API 31+.
+          neverForLocation: true,
           // The iOS usage string is set below in infoPlist (and localized from
           // `locales`), so the plugin must not add its own.
           bluetoothAlwaysPermission: false,

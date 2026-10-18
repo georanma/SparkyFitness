@@ -727,6 +727,7 @@ jest.mock('react-native-ble-plx', () => {
   };
   return {
     BleManager: jest.fn(() => manager),
+    BleErrorCode: { OperationCancelled: 2, DeviceDisconnected: 201 },
     State: {
       Unknown: 'Unknown',
       Resetting: 'Resetting',

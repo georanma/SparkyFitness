@@ -80,6 +80,27 @@ describe('useScaleScan', () => {
     expect(stop).toHaveBeenCalled();
   });
 
+  it('does not start a scan if the screen unmounts while waiting for Bluetooth access', async () => {
+    let grant: (access: 'ready') => void = () => undefined;
+    mockAccess.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          grant = resolve;
+        })
+    );
+    const { result, unmount } = renderHook(() => useScaleScan());
+    let started: Promise<void> = Promise.resolve();
+    act(() => {
+      started = result.current.start();
+    });
+    unmount();
+    await act(async () => {
+      grant('ready');
+      await started;
+    });
+    expect(mockScan).not.toHaveBeenCalled();
+  });
+
   it('stops scanning on unmount', async () => {
     const { result, unmount } = renderHook(() => useScaleScan());
     await act(async () => {
